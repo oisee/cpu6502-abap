@@ -2,6 +2,8 @@
 
 A Z-Machine V3 interpreter written in ABAP. Play classic Infocom text adventures like Zork on SAP systems.
 
+![ZORK-ABAP](./media/zork-abap.png)
+
 ![Vibecoded](https://img.shields.io/badge/vibecoded-with%20Claude%20Code-blueviolet)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-SAP%20ABAP-blue)
