@@ -1,0 +1,12 @@
+# RunCPM reference implementation
+RunCPM/
+
+# Node.js / Transpiler
+node_modules/
+output/
+*.backup
+*.old
+
+# npm
+package-lock.json
+.mcp*.json
