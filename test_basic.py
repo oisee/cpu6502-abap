@@ -684,18 +684,18 @@ def run_interactive(cpu: CPU6502):
         cpu.run()
 
         if cpu.halted:
-            # CPU halted at RDKEY - get line input
+            # CPU halted at RDKEY - save cursor position NOW (after BASIC's prompt)
+            # Then get input, restore position, clear from there to end of line
+            sys.stdout.write('\033[s')  # Save cursor position (after prompt like "OK" or "?")
+            sys.stdout.flush()
+
             try:
                 line = input()
 
-                # After Enter, cursor is on new line. Move up and clear the line
-                # we just typed, so BASIC's echo is the only one displayed.
-                # \033[A = move cursor up one line
-                # \033[2K = clear entire line
-                # \033[G = move cursor to column 1
-                sys.stdout.write('\033[A')   # Move up
-                sys.stdout.write('\033[2K')  # Clear entire line
-                sys.stdout.write('\033[G')   # Move to start of line
+                # Restore to saved position (right after prompt) and clear to end of line
+                # This erases only what we typed, keeping the prompt intact
+                sys.stdout.write('\033[u')   # Restore to saved position
+                sys.stdout.write('\033[J')   # Clear from cursor to end of screen
                 sys.stdout.flush()
             except EOFError:
                 break
