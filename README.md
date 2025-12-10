@@ -61,6 +61,8 @@ python3 test_basic.py --batch
 python3 test_basic.py
 ```
 
+Interactive mode uses raw terminal input with cursor position queries to seamlessly integrate with BASIC's line editing - type naturally, and BASIC echoes your input as it processes each character.
+
 ### Hook System
 
 The emulator supports two levels of interception that work together:
