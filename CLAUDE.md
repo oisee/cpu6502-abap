@@ -200,3 +200,77 @@ lv_value = mo_bus->read( 256 + mv_sp ).
 
 ### No-op
 `NOP`
+
+## MS-BASIC Integration
+
+### Building MS-BASIC for ABAP
+
+The `msbasic/` directory contains a fork of [mist64/msbasic](https://github.com/mist64/msbasic) with an ABAP target added.
+
+**Build requirements:**
+- cc65 assembler suite (`brew install cc65`)
+
+**Build command:**
+```bash
+cd msbasic && ./make.sh
+```
+
+**Output:** `msbasic/tmp/abap.bin` (~30KB)
+
+### Memory Map
+
+| Address | Purpose |
+|---------|---------|
+| `$0000-$00FF` | Zero page (BASIC variables) |
+| `$0100-$01FF` | Stack |
+| `$0200-$02FF` | Input buffer |
+| `$0300-$07FF` | BASIC program storage |
+| `$0800-$7EFF` | MS-BASIC ROM |
+| `$FFF0` | CHAROUT - write character here |
+| `$FFF1` | CHARIN - read character from here |
+| `$FFF2` | STATUS - bit 0 = char available |
+
+### Key Addresses
+
+| Symbol | Address | Purpose |
+|--------|---------|---------|
+| `COLD_START` | `$272D` | Entry point for cold boot |
+| `COUT_ABAP` | `$28C7` | Character output routine |
+| `RDKEY_ABAP` | `$28CB` | Character input routine |
+
+### I/O Integration with ABAP Bus
+
+The ABAP bus class needs to intercept reads/writes to `$FFF0-$FFF2`:
+
+```abap
+METHOD write.
+  CASE iv_addr.
+    WHEN 65520.  " $FFF0 - CHAROUT
+      " Output character to console/buffer
+      mv_output = mv_output && cl_abap_conv_codepage=>create_out( )->convert(
+        source = VALUE #( ( CONV x( iv_value ) ) ) ).
+    WHEN OTHERS.
+      mt_memory[ iv_addr + 1 ] = iv_value.
+  ENDCASE.
+ENDMETHOD.
+
+METHOD read.
+  CASE iv_addr.
+    WHEN 65521.  " $FFF1 - CHARIN
+      " Return next character from input buffer
+      rv_value = get_next_input_char( ).
+    WHEN 65522.  " $FFF2 - STATUS
+      " Return 1 if input available, 0 otherwise
+      rv_value = COND #( WHEN mv_input_available = abap_true THEN 1 ELSE 0 ).
+    WHEN OTHERS.
+      rv_value = mt_memory[ iv_addr + 1 ].
+  ENDCASE.
+ENDMETHOD.
+```
+
+### Running BASIC
+
+1. Load `abap.bin` at address `$0800`
+2. Set PC to `$272D` (COLD_START)
+3. Run CPU until it halts or needs input
+4. Handle I/O via memory-mapped addresses

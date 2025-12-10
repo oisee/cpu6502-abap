@@ -1,6 +1,10 @@
 # RunCPM reference implementation
 RunCPM/
 
+# MS-BASIC 6502 (separate repos)
+BASIC-M6502/
+msbasic/
+
 # Node.js / Transpiler
 node_modules/
 output/
