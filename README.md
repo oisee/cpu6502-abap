@@ -19,6 +19,59 @@ A MOS 6502 CPU emulator written in ABAP. Run 6502 machine code on SAP systems.
 - Stack operations (PHA, PLA, PHP, PLP)
 - All addressing modes (immediate, zero page, absolute, indexed, indirect)
 
+## MS-BASIC Running!
+
+**Microsoft BASIC (1977) runs on this emulator!**
+
+```
+MEMORY SIZE?
+TERMINAL WIDTH?
+
+ 1279 BYTES FREE
+
+COPYRIGHT 1977 BY MICROSOFT CO.
+
+OK
+PRINT "HELLO WORLD"
+HELLO WORLD
+
+OK
+PRINT 2+2
+ 4
+
+OK
+10 PRINT "TEST"
+20 PRINT 3*4
+RUN
+TEST
+ 12
+
+OK
+```
+
+### Test Harness
+
+A Python 6502 emulator (`test_basic.py`) is included for local testing:
+
+```bash
+# Batch mode - run pre-defined commands
+python3 test_basic.py --batch
+
+# Interactive mode - terminal session
+python3 test_basic.py
+```
+
+### Memory-Mapped I/O
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| `$FFF0` | CHAROUT | Write character to output |
+| `$FFF1` | CHARIN | Read character from input (consuming) |
+| `$FFF2` | STATUS | I/O status (bit 0 = char available) |
+| `$FFF3` | PEEK | Peek next char without consuming |
+
+The ABAP emulator can intercept these addresses to connect BASIC to SAP I/O.
+
 ## What is This?
 
 The MOS 6502 is the legendary 8-bit CPU that powered the Apple II, Commodore 64, NES, Atari 2600, and many other classic systems. This ABAP implementation emulates the 6502 instruction set, allowing you to run 6502 programs inside SAP.
@@ -90,6 +143,15 @@ Load a ROM file and step through execution.
 3. Activate all objects
 4. Run unit tests to verify
 
+## Files
+
+```
+src/cpu6502/           - ABAP 6502 emulator classes
+bin/msbasic.bin        - Compiled MS-BASIC (30KB)
+test_basic.py          - Python test harness
+msbasic/               - MS-BASIC source (gitignored, from mist64/msbasic)
+```
+
 ## Development
 
 This project uses [vibing-steampunk](https://github.com/oisee/vibing-steampunk) for AI-assisted development:
@@ -130,6 +192,10 @@ lv_result = lv_value DIV 2 + lv_carry * 128.
 - [Easy 6502](https://skilldrick.github.io/easy6502/) - Interactive 6502 tutorial
 - [6502 Instruction Set](https://www.masswerk.at/6502/6502_instruction_set.html) - Complete opcode reference
 
+### MS-BASIC
+- [mist64/msbasic](https://github.com/mist64/msbasic) - MS-BASIC for 6502 (ca65 compatible)
+- [Microsoft BASIC History](https://www.pagetable.com/?p=774) - The story of MS-BASIC
+
 ### Development Tools
 - [vibing-steampunk](https://github.com/oisee/vibing-steampunk) - MCP server for SAP ADT
 - [Claude Code](https://claude.ai/code) - AI coding assistant
@@ -141,9 +207,12 @@ MIT License - see [LICENSE](LICENSE) file.
 ## Credits
 
 - **MOS Technology** - Original 6502 design (1975)
+- **Microsoft** - BASIC interpreter (1975-1977)
 - **Anthropic** - Claude Code, the AI that wrote this
 - **vibing-steampunk** - MCP bridge that made it possible
 
 ---
 
 *"The 6502 - powering dreams since 1975, now in your SAP system."*
+
+*"READY." - Microsoft BASIC, running on ABAP, 2024*
