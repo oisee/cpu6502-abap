@@ -685,8 +685,20 @@ def run_interactive(cpu: CPU6502):
 
         if cpu.halted:
             # CPU halted at RDKEY - get line input
+            # Save cursor position, get input, then clear the line
+            # (BASIC will echo it back, so we avoid double display)
             try:
+                # Save cursor position
+                sys.stdout.write('\033[s')
+                sys.stdout.flush()
+
                 line = input()
+
+                # Restore cursor position and clear to end of line
+                # This erases what we just typed so BASIC's echo is the only one
+                sys.stdout.write('\033[u')  # Restore position
+                sys.stdout.write('\033[K')  # Clear to end of line
+                sys.stdout.flush()
             except EOFError:
                 break
 
