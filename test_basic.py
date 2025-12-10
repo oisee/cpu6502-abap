@@ -674,6 +674,77 @@ def check_stdin():
     return select.select([sys.stdin], [], [], 0)[0]
 
 
+def get_cursor_position():
+    """Query terminal for current cursor position. Returns (row, col) or None."""
+    old_settings = termios.tcgetattr(sys.stdin)
+    try:
+        tty.setraw(sys.stdin.fileno())
+        sys.stdout.write('\033[6n')  # Query cursor position
+        sys.stdout.flush()
+
+        # Read response: \033[row;colR
+        response = ''
+        while True:
+            ch = sys.stdin.read(1)
+            response += ch
+            if ch == 'R':
+                break
+            if len(response) > 20:  # Safety limit
+                return None
+
+        # Parse \033[row;colR
+        if response.startswith('\033[') and response.endswith('R'):
+            parts = response[2:-1].split(';')
+            if len(parts) == 2:
+                return (int(parts[0]), int(parts[1]))
+    except:
+        pass
+    finally:
+        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+    return None
+
+
+def move_cursor(row, col):
+    """Move cursor to specific position."""
+    sys.stdout.write(f'\033[{row};{col}H')
+    sys.stdout.flush()
+
+
+def clear_from_cursor():
+    """Clear from cursor to end of screen."""
+    sys.stdout.write('\033[J')
+    sys.stdout.flush()
+
+
+def read_line_raw():
+    """Read a line with echo, but in raw mode so we control everything."""
+    old_settings = termios.tcgetattr(sys.stdin)
+    line = []
+    try:
+        tty.setcbreak(sys.stdin.fileno())  # cbreak mode: char by char, but allow signals
+        while True:
+            ch = sys.stdin.read(1)
+            if ch == '\r' or ch == '\n':
+                break
+            elif ch == '\x7f' or ch == '\x08':  # Backspace/Delete
+                if line:
+                    line.pop()
+                    sys.stdout.write('\b \b')  # Erase character on screen
+                    sys.stdout.flush()
+            elif ch == '\x03':  # Ctrl-C
+                raise KeyboardInterrupt
+            elif ch == '\x04':  # Ctrl-D (EOF)
+                if not line:
+                    raise EOFError
+            elif ch >= ' ':  # Printable
+                line.append(ch)
+                sys.stdout.write(ch)
+                sys.stdout.flush()
+    finally:
+        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+    return ''.join(line)
+
+
 def run_interactive(cpu: CPU6502):
     """Run interactively with line-based input (PC hook halts at RDKEY)."""
     print("MS-BASIC (PC + Port hooks)")
@@ -684,20 +755,19 @@ def run_interactive(cpu: CPU6502):
         cpu.run()
 
         if cpu.halted:
-            # CPU halted at RDKEY - save cursor position NOW (after BASIC's prompt)
-            # Then get input, restore position, clear from there to end of line
-            sys.stdout.write('\033[s')  # Save cursor position (after prompt like "OK" or "?")
-            sys.stdout.flush()
+            # Get cursor position NOW (after BASIC's prompt like "OK" or "MEMORY SIZE?")
+            start_pos = get_cursor_position()
 
             try:
-                line = input()
+                line = read_line_raw()
 
-                # Restore to saved position (right after prompt) and clear to end of line
-                # This erases only what we typed, keeping the prompt intact
-                sys.stdout.write('\033[u')   # Restore to saved position
-                sys.stdout.write('\033[J')   # Clear from cursor to end of screen
-                sys.stdout.flush()
-            except EOFError:
+                # Move back to start position and clear what we typed
+                # BASIC will echo it as it processes the input buffer
+                if start_pos:
+                    move_cursor(start_pos[0], start_pos[1])
+                    clear_from_cursor()
+            except (EOFError, KeyboardInterrupt):
+                print()
                 break
 
             if line.lower() == 'quit':
