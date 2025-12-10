@@ -161,7 +161,9 @@ CLASS zcl_cpu_00_cpu IMPLEMENTATION.
 
   METHOD read.
     rv_val = mo_bus->read( iv_addr ).
-    IF mo_bus->is_input_ready( ) = abap_false AND iv_addr = 61441.
+    " Check for input wait on known I/O input addresses:
+    " $F001 (61441) - simple bus, $FFF1 (65521) - MS-BASIC bus
+    IF mo_bus->is_input_ready( ) = abap_false AND ( iv_addr = 61441 OR iv_addr = 65521 ).
       mv_waiting = abap_true.
     ENDIF.
   ENDMETHOD.
