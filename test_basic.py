@@ -642,9 +642,10 @@ def setup_basic_hooks(cpu: CPU6502, use_pc_halt: bool = True):
         cpu.output_buffer.append(value)
         return (HookAction.SKIP, None)  # Don't write to memory
 
-    def on_write_rom(addr, value):
-        """Protect ROM from writes."""
-        return (HookAction.SKIP, None)
+    # NOTE: ROM protection removed - MS-BASIC legitimately writes to
+    # addresses in the $0800+ range for temporary string storage.
+    # The old on_write_rom hook blocked writes to $270B-$270F which
+    # broke immediate mode PRINT "string" commands.
 
     # --- PC hooks (Function interception) ---
 
@@ -660,9 +661,7 @@ def setup_basic_hooks(cpu: CPU6502, use_pc_halt: bool = True):
     cpu.on_read(IO_PEEK, on_read_peek)
     cpu.on_write(IO_CHAROUT, on_write_charout)
 
-    # ROM protection ($0800+)
-    for addr in range(0x0800, 0xFFF0):
-        cpu.on_write(addr, on_write_rom)
+    # ROM protection disabled - see comment above
 
     # Always register PC hook (controlled by use_pc_halt flag)
     cpu.on_pc(ADDR_RDKEY, on_pc_rdkey)

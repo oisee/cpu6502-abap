@@ -3,7 +3,7 @@ CLASS zcl_cpu_6502_bus_basic DEFINITION
   CREATE PUBLIC.
 ************************************************************************
 * MS-BASIC Bus Implementation for 6502 Emulator
-* - 64KB RAM with ROM protection ($0800+)
+* - 64KB RAM (no ROM protection - BASIC needs to write temp strings)
 * - Memory-mapped I/O at $FFF0-$FFF3:
 *   $FFF0 - CHAROUT: Write character to output
 *   $FFF1 - CHARIN:  Read character from input (consuming)
@@ -20,8 +20,9 @@ CLASS zcl_cpu_6502_bus_basic DEFINITION
                c_io_status  TYPE i VALUE 65522,  " $FFF2
                c_io_peek    TYPE i VALUE 65523.  " $FFF3
 
-    " ROM start address (writes ignored above this)
-    CONSTANTS: c_rom_start TYPE i VALUE 2048.    " $0800
+    " ROM start address (for reference - protection disabled)
+    " MS-BASIC uses addresses in ROM area for temp string storage
+    CONSTANTS: c_rom_start TYPE i VALUE 2048.    " $0800 (unused)
 
     METHODS constructor.
 
@@ -263,10 +264,10 @@ CLASS ZCL_CPU_6502_BUS_BASIC IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    " ROM protection - ignore writes to $0800 and above (except I/O)
-    IF iv_addr >= c_rom_start AND iv_addr < c_io_charout.
-      RETURN.
-    ENDIF.
+    " NOTE: ROM protection removed - MS-BASIC legitimately writes to
+    " addresses in the $0800+ range for temporary string storage.
+    " The old protection blocked writes to $270B-$270F which broke
+    " immediate mode PRINT "string" commands.
 
     " Regular memory write
     DATA lv_idx TYPE i.

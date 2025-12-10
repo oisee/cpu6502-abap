@@ -239,7 +239,11 @@ MIT License - see [LICENSE](LICENSE) file.
 - **MOS Technology** - Original 6502 design (1975)
 - **Microsoft** - BASIC interpreter (1975-1977)
 - **Anthropic** - Claude Code, the AI that wrote this
-- **vibing-steampunk** - MCP bridge that made it possible
+- **[vibing-steampunk](https://github.com/oisee/vibing-steampunk)** - MCP server bridging Claude to SAP ADT
+
+## Acknowledgments
+
+Special thanks to **Scott Hanselman** and everyone involved in the effort to preserve and open-source historically significant code. The release of the original Microsoft BASIC source code transforms what was once locked away in archives into living history that can be studied, learned from, and—as this project demonstrates—brought back to life on platforms its creators never imagined. This act of digital preservation ensures that the foundations of personal computing remain accessible to future generations of developers, historians, and enthusiasts.
 
 ---
 

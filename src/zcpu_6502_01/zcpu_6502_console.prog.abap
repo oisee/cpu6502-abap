@@ -63,7 +63,7 @@ CLASS lcl_console_controller DEFINITION FINAL.
           mv_running   TYPE abap_bool,
           mv_started   TYPE abap_bool.
 
-    CONSTANTS: c_load_addr TYPE i VALUE 2048,    " $0800
+    CONSTANTS: c_load_addr TYPE i VALUE 2048,               " $0800
                c_start_pc  TYPE i VALUE 10032.   " $2730 MS-BASIC cold start
 
     METHODS:
@@ -105,9 +105,9 @@ DATA: go_controller TYPE REF TO lcl_console_controller,
       gv_rom        TYPE xstring.
 
 " Debug event log (disabled - set gv_debug = abap_true to enable)
-DATA: gt_log TYPE STANDARD TABLE OF string WITH EMPTY KEY,
+DATA: gt_log     TYPE STANDARD TABLE OF string WITH EMPTY KEY,
       gv_log_seq TYPE i VALUE 0,
-      gv_debug TYPE abap_bool VALUE abap_false.
+      gv_debug   TYPE abap_bool VALUE abap_false.
 
 FORM add_log USING iv_msg TYPE string.
   CHECK gv_debug = abap_true.
@@ -135,8 +135,9 @@ AT SELECTION-SCREEN OUTPUT.
   ENDLOOP.
 
   CALL FUNCTION 'VRM_SET_VALUES'
-    EXPORTING id     = 'P_ROM'
-              values = lt_values.
+    EXPORTING
+      id     = 'P_ROM'
+      values = lt_values.
 
   " Enable/disable fields based on radio button
   LOOP AT SCREEN.
@@ -177,12 +178,13 @@ CLASS lcl_html_display IMPLEMENTATION.
   METHOD constructor.
     mv_max_lines = iv_max_lines.
     CREATE OBJECT mo_html_viewer
-      EXPORTING parent = io_container.
+      EXPORTING
+        parent = io_container.
   ENDMETHOD.
 
   METHOD append_text.
-    DATA: lt_new_lines TYPE STANDARD TABLE OF string,
-          lv_text      TYPE string,
+    DATA: lt_new_lines         TYPE STANDARD TABLE OF string,
+          lv_text              TYPE string,
           lv_ends_with_newline TYPE abap_bool.
 
     lv_text = iv_text.
@@ -247,8 +249,10 @@ CLASS lcl_html_display IMPLEMENTATION.
     ENDWHILE.
 
     mo_html_viewer->load_data(
-      IMPORTING assigned_url = lv_url
-      CHANGING  data_table   = lt_html ).
+      IMPORTING
+        assigned_url = lv_url
+      CHANGING
+        data_table   = lt_html ).
     mo_html_viewer->show_url( url = lv_url ).
   ENDMETHOD.
 
@@ -272,9 +276,11 @@ CLASS lcl_html_display IMPLEMENTATION.
     rv_html =
       |<html><head><style>| &&
       |body \{ background-color: #000000; color: #00ff00; | &&
-      |font-family: 'Courier New', monospace; font-size: { gc_font_size }px; | &&
+      |font-family: Consolas, Monaco, monospace; | &&
+      |font-size: { gc_font_size }px; | &&
       |padding: 10px; margin: 0; \}| &&
       |pre \{ margin: 0; white-space: pre-wrap; word-wrap: break-word; | &&
+      |font-family: inherit; | &&
       |line-height: { gc_line_height }; \}| &&
       |</style></head><body>| &&
       |<pre>{ lv_content }</pre>| &&
@@ -353,6 +359,9 @@ CLASS lcl_console_controller IMPLEMENTATION.
         PERFORM add_log USING 'handle_command: calling process_input'.
         process_input( ).
         PERFORM add_log USING 'handle_command: process_input done'.
+      WHEN '&RESET'.
+        mo_display->clear( ).
+        start_emulator( ).
     ENDCASE.
   ENDMETHOD.
 
@@ -566,8 +575,10 @@ MODULE status_0100 OUTPUT.
   IF go_container IS NOT BOUND.
     PERFORM add_log USING 'PBO: Creating container'.
     CREATE OBJECT go_container
-      EXPORTING container_name = 'HTML_CONTAINER'
-      EXCEPTIONS OTHERS = 1.
+      EXPORTING
+        container_name = 'HTML_CONTAINER'
+      EXCEPTIONS
+        OTHERS         = 1.
 
     IF sy-subrc = 0.
       PERFORM add_log USING 'PBO: Initializing screen'.
